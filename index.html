@@ -32,6 +32,10 @@
             transition: background-color 0.3s ease, backdrop-filter 0.3s ease;
         }
 
+        .form-group {
+            margin-bottom: 15px;
+        }
+
         .form-group label {
             display: block;
             margin-bottom: 8px;
@@ -767,7 +771,7 @@
             updateTable();
             updateSummary();
             updateGoalInfoAndMessages();
-            clearDB(true); // true para indicar que borre también el historial
+            clearDB(true);
         }
     }
 
@@ -833,10 +837,7 @@
     }
 
     function startNewDay() {
-        if (trades.length > 0) {
-            endDaySession();
-            showFloatingMessage("Día anterior finalizado y guardado en historial.", "success");
-        }
+        // Iniciar un nuevo día sin guardar la sesión anterior
         trades = [];
         currentAmount = 0;
         operationCount = 0;
@@ -850,7 +851,7 @@
         updateSummary();
         updateGoalInfoAndMessages();
         showFloatingMessage("Nuevo día iniciado. Configura tu monto inicial y parámetros antes de operar.", "success");
-        clearDB(false); // false para no borrar el historial
+        clearDB(false); // no borramos el historial
     }
 
     function endDay() {
@@ -885,7 +886,8 @@
             if (data.length === 0) {
                 list.innerHTML = 'No hay sesiones previas.';
             } else {
-                data.forEach(entry => {
+                // Invertir el array para mostrar primero las sesiones más recientes
+                data.slice().reverse().forEach(entry => {
                     const div = document.createElement('div');
                     div.className = 'history-entry';
                     div.innerHTML = `
@@ -905,8 +907,6 @@
         document.getElementById('history-modal').style.display = 'none';
     }
 
-    // Se han removido las funciones de Backup/Restore desde JSON
-
     function showFloatingMessage(text, type) {
         const container = document.getElementById('floating-messages-container');
         const msg = document.createElement('div');
@@ -921,11 +921,12 @@
     }
 
     function clearDB(clearHistory = false) {
-        const tx = db.transaction([TRADES_STORE, SETTINGS_STORE, HISTORY_STORE], 'readwrite');
-        tx.objectStore(TRADES_STORE).clear();
-        tx.objectStore(SETTINGS_STORE).clear();
-        if (clearHistory) {
-            tx.objectStore(HISTORY_STORE).clear(); // limpiar el historial también
+        const stores = [TRADES_STORE, SETTINGS_STORE];
+        if (clearHistory) stores.push(HISTORY_STORE);
+
+        const tx = db.transaction(stores, 'readwrite');
+        for (const storeName of stores) {
+            tx.objectStore(storeName).clear();
         }
     }
 </script>
