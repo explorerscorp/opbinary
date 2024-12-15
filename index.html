@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Registro de Trade - Sesiones Diarias</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+            transition: color 0.3s ease;
+        }
+
+        .summary, .operations, .goal-info, h3 {
+            transition: color 0.3s ease;
+        }
+
+        form {
+            max-width: 500px;
+            margin: 20px auto;
+            padding: 20px;
+            border: none;
+            border-radius: 12px;
+            transition: background-color 0.3s ease, backdrop-filter 0.3s ease;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        #monto-inicial + .modify-btn {
+            margin-top: 8px;
+            display: block;
+            width: 100%;
+            text-align: center;
+        }
+
+        button.modify-btn {
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-top: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .trade-button-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .register-btn {
+            border: none;
+            padding: 15px 30px;
+            cursor: pointer;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        .other-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .other-buttons button {
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 14px;
+            width: 100%;
+            text-align: center;
+            transition: background-color 0.3s ease;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            font-size: 12px;
+            transition: background-color 0.3s ease, border 0.3s ease;
+        }
+
+        table, th, td {
+            border: 1px solid;
+            transition: border-color 0.3s ease;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+            transition: color 0.3s ease;
+        }
+
+        .floating-messages-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .floating-message {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            opacity: 0.95;
+            transition: background-color 0.3s ease;
+        }
+
+        #history-modal {
+            display: none;
+            position: fixed;
+            z-index: 99999;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            backdrop-filter: blur(5px);
+            transition: background-color 0.3s ease, backdrop-filter 0.3s ease;
+        }
+
+        #history-content {
+            margin: 5% auto;
+            padding: 20px;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        #history-close {
+            position: absolute;
+            top: 10px; right: 10px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 16px;
+        }
+
+        .history-entry {
+            margin-bottom: 10px;
+            border-bottom: 1px solid;
+            padding-bottom: 10px;
+            transition: border-color 0.3s ease;
+        }
+
+        .positive {
+            font-weight: bold;
+        }
+
+        .negative {
+            font-weight: bold;
+        }
+
+        @media (max-width: 600px) {
+            .other-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .register-btn {
+                width: 100%;
+            }
+        }
+
+        /* Tema oscuro (por defecto) */
+        body {
+            background: linear-gradient(to bottom right, #1a1a1a, #2a2a2a);
+            color: #cccccc;
+        }
+        h2 {
+            color: #00bcd4;
+        }
+        .summary, .operations, .goal-info, h3 {
+            color: #ffffff;
+        }
+        form {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(4px);
+        }
+        .form-group label {
+            color: #00bcd4;
+        }
+        .form-group input,
+        .form-group select {
+            background: #2a2a2a;
+            color: #ffffff;
+            box-shadow: none;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            box-shadow: 0 0 6px #00bcd4;
+        }
+
+        button.modify-btn {
+            background-color: #00bcd4;
+            color: white;
+        }
+        button.modify-btn:hover {
+            background-color: #0097a7;
+        }
+
+        .register-btn {
+            background-color: #ff9800;
+            color: #ffffff;
+        }
+        .register-btn:hover {
+            background-color: #fb8c00;
+        }
+
+        .other-buttons .modify-btn {
+            background-color: #00bcd4;
+            color: #ffffff;
+        }
+        .other-buttons .modify-btn:hover {
+            background-color: #0097a7;
+        }
+
+        .other-buttons .reset-btn {
+            background-color: #f44336;
+            color: #ffffff;
+        }
+        .other-buttons .reset-btn:hover {
+            background-color: #e53935;
+        }
+
+        table {
+            background-color: rgba(255,255,255,0.05);
+            border-color: #333;
+        }
+        th {
+            background-color: #00bcd4;
+            color: #ffffff;
+        }
+        td, th {
+            color: #ffffff;
+            border-color: #333;
+        }
+
+        .floating-message.success {
+            background-color: #4caf50;
+        }
+        .floating-message.warning {
+            background-color: #f44336;
+        }
+
+        #history-modal {
+            background-color: rgba(0,0,0,0.7);
+        }
+
+        #history-content {
+            background-color: #1f1f1f;
+            color: #ffffff;
+        }
+
+        .history-entry {
+            border-color: #444;
+        }
+
+        .positive {
+            color: #66bb6a;
+        }
+        .negative {
+            color: #ef5350;
+        }
+
+        /* Tema claro */
+        @media (prefers-color-scheme: light) {
+            body {
+                background: linear-gradient(to bottom right, #e0f7fa, #ffffff);
+                color: #333333;
+            }
+            h2 {
+                color: #00796b;
+            }
+            .summary, .operations, .goal-info, h3 {
+                color: #333333;
+            }
+            form {
+                background: rgba(0,0,0,0.05);
+                backdrop-filter: blur(4px);
+            }
+            .form-group label {
+                color: #00796b;
+            }
+            .form-group input,
+            .form-group select {
+                background: #ffffff;
+                color: #333333;
+            }
+            .form-group input:focus,
+            .form-group select:focus {
+                box-shadow: 0 0 6px #00796b;
+            }
+
+            button.modify-btn {
+                background-color: #0097a7;
+                color: #ffffff;
+            }
+            button.modify-btn:hover {
+                background-color: #00838f;
+            }
+
+            .register-btn {
+                background-color: #ffa726;
+                color: #ffffff;
+            }
+            .register-btn:hover {
+                background-color: #fb8c00;
+            }
+
+            .other-buttons .modify-btn {
+                background-color: #0097a7;
+                color: #ffffff;
+            }
+            .other-buttons .modify-btn:hover {
+                background-color: #00838f;
+            }
+
+            .other-buttons .reset-btn {
+                background-color: #e53935;
+                color: #ffffff;
+            }
+            .other-buttons .reset-btn:hover {
+                background-color: #d32f2f;
+            }
+
+            table {
+                background-color: #ffffff;
+                border-color: #ccc;
+            }
+            th {
+                background-color: #00796b;
+                color: #ffffff;
+            }
+            td, th {
+                color: #333333;
+                border-color: #ccc;
+            }
+
+            .floating-message.success {
+                background-color: #4caf50;
+            }
+            .floating-message.warning {
+                background-color: #f44336;
+            }
+
+            #history-modal {
+                background-color: rgba(0,0,0,0.4);
+            }
+
+            #history-content {
+                background-color: #f5f5f5;
+                color: #333333;
+            }
+
+            .history-entry {
+                border-color: #bbb;
+            }
+
+            .positive {
+                color: #2e7d32;
+            }
+            .negative {
+                color: #c62828;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+<h2>Registro de Trade en Opciones Binarias (Sesiones Diarias)</h2>
+<div class="summary">
+    Monto Actual: <span id="monto-actual" class="positive">$0.00</span><br>
+    Tasa de Efectividad: <span id="effectiveness-rate">0%</span><br>
+    Total Ganadas: <span id="total-won">0</span> | Total Perdidas: <span id="total-lost">0</span>
+</div>
+
+<div class="operations">
+    Total de Operaciones Hoy: <span class="operation-counter" id="operation-counter">0</span>
+</div>
+
+<form id="tradeForm">
+    <div class="form-group">
+        <label for="temporalidad">Temporalidad:</label>
+        <select id="temporalidad" name="temporalidad" required>
+            <option value="1m">1 minuto</option>
+            <option value="5m">5 minutos</option>
+            <option value="15m">15 minutos</option>
+            <option value="30m">30 minutos</option>
+            <option value="1h">1 hora</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="monto-inicial">Monto Inicial:</label>
+        <input type="number" id="monto-inicial" name="monto_inicial" step="0.01" min="0" required>
+        <button type="button" class="modify-btn" onclick="modifyInitialAmount()">Modificar</button>
+    </div>
+
+    <div class="form-group">
+        <label for="monto-por-trade">Monto por Trade:</label>
+        <input type="number" id="monto-por-trade" name="monto_por_trade" step="0.01" min="0" required>
+    </div>
+
+    <div class="form-group">
+        <label for="porcentaje">Porcentaje (%):</label>
+        <input type="number" id="porcentaje" name="porcentaje" step="1" min="0" max="100" value="85" required>
+    </div>
+
+    <div class="form-group">
+        <label for="resultado">Resultado:</label>
+        <select id="resultado" name="resultado" required>
+            <option value="ganado">Ganado</option>
+            <option value="perdido">Perdido</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="daily-limit">Límite de Trades por Día:</label>
+        <input type="number" id="daily-limit" name="daily_limit" min="1" value="10">
+    </div>
+
+    <div class="form-group">
+        <label for="daily-goal-amount">Meta Diaria (Monto en $):</label>
+        <input type="number" id="daily-goal-amount" name="daily_goal_amount" step="0.01" min="0" value="5">
+    </div>
+
+    <div class="trade-button-container">
+        <button type="button" class="register-btn" onclick="registerTrade()">Registrar Trade</button>
+    </div>
+    <div class="other-buttons">
+        <button type="button" class="modify-btn" onclick="startNewDay()">Iniciar Nuevo Día</button>
+        <button type="button" class="modify-btn" onclick="endDay()">Finalizar Día</button>
+        <button type="button" class="reset-btn" onclick="resetAll()">Resetear</button>
+        <button type="button" class="modify-btn" onclick="showHistory()">Ver Historial</button>
+    </div>
+</form>
+
+<div class="goal-info" id="goal-info"></div>
+
+<h3>Historial de Trades del Día</h3>
+<table id="tradeTable">
+    <thead>
+        <tr>
+            <th>Temporalidad</th>
+            <th>Monto por Trade</th>
+            <th>Resultado</th>
+            <th>Fecha y Hora</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+
+<div class="floating-messages-container" id="floating-messages-container"></div>
+
+<div id="history-modal">
+    <div id="history-content">
+        <button id="history-close" onclick="closeHistory()">X</button>
+        <h3>Historial de Sesiones Anteriores</h3>
+        <div id="history-list"></div>
+    </div>
+</div>
+
+<script>
+    let trades = [];
+    let currentAmount = 0;
+    let operationCount = 0;
+    let totalWon = 0;
+    let totalLost = 0;
+    let dailyLimit = 10;
+    let db;
+    let initialCapital = 0; 
+    let dailyGoalAmount = 5;
+    let dayActive = false;
+
+    const DB_NAME = 'TradeDB';
+    const DB_VERSION = 2; 
+    const TRADES_STORE = 'trades';
+    const SETTINGS_STORE = 'settings';
+    const HISTORY_STORE = 'history';
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initDB();
+        ['daily-goal-amount','daily-limit','porcentaje','monto-por-trade','monto-inicial'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updateGoalInfoAndMessages);
+        });
+    });
+
+    function initDB() {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+        request.onupgradeneeded = function(e) {
+            db = e.target.result;
+            if(!db.objectStoreNames.contains(TRADES_STORE)) {
+                db.createObjectStore(TRADES_STORE, { autoIncrement: true });
+            }
+            if(!db.objectStoreNames.contains(SETTINGS_STORE)) {
+                db.createObjectStore(SETTINGS_STORE, { keyPath: 'id' });
+            }
+            if(!db.objectStoreNames.contains(HISTORY_STORE)) {
+                db.createObjectStore(HISTORY_STORE, { autoIncrement: true });
+            }
+        };
+
+        request.onsuccess = function(e) {
+            db = e.target.result;
+            loadDataFromDB();
+        };
+
+        request.onerror = function(e) {
+            console.error("Error al abrir la base de datos:", e);
+        };
+    }
+
+    function loadDataFromDB() {
+        const tx = db.transaction(SETTINGS_STORE, 'readonly');
+        const store = tx.objectStore(SETTINGS_STORE);
+        const req = store.get('settings');
+        req.onsuccess = function(e) {
+            const data = e.target.result;
+            if (data) {
+                currentAmount = data.currentAmount;
+                operationCount = data.operationCount;
+                totalWon = data.totalWon;
+                totalLost = data.totalLost;
+                dailyLimit = data.dailyLimit || 10;
+                initialCapital = data.initialAmount || 0;
+                dailyGoalAmount = data.dailyGoalAmount || 5;
+
+                document.getElementById('monto-inicial').value = initialCapital ? initialCapital.toFixed(2) : '';
+                document.getElementById('monto-inicial').disabled = (operationCount > 0);
+                document.getElementById('daily-limit').value = dailyLimit;
+                document.getElementById('daily-goal-amount').value = dailyGoalAmount;
+
+                updateSummary();
+                updateGoalInfoAndMessages();
+                if (operationCount > 0) {
+                    dayActive = true;
+                }
+            }
+        }
+
+        const tx2 = db.transaction(TRADES_STORE, 'readonly');
+        const store2 = tx2.objectStore(TRADES_STORE);
+        const req2 = store2.getAll();
+        req2.onsuccess = function(e) {
+            trades = e.target.result || [];
+            updateTable();
+            updateSummary();
+            updateGoalInfoAndMessages();
+        }
+    }
+
+    function saveDataToDB() {
+        const tx = db.transaction([TRADES_STORE, SETTINGS_STORE], 'readwrite');
+        const tradesStore = tx.objectStore(TRADES_STORE);
+        const settingsStore = tx.objectStore(SETTINGS_STORE);
+
+        const clearReq = tradesStore.clear();
+        clearReq.onsuccess = function() {
+            for (const trade of trades) {
+                tradesStore.add(trade);
+            }
+        }
+
+        const settings = {
+            id: 'settings',
+            currentAmount: currentAmount,
+            operationCount: operationCount,
+            totalWon: totalWon,
+            totalLost: totalLost,
+            dailyLimit: parseInt(document.getElementById('daily-limit').value),
+            initialAmount: parseFloat(document.getElementById('monto-inicial').value) || 0,
+            dailyGoalAmount: parseFloat(document.getElementById('daily-goal-amount').value) || 5
+        };
+        settingsStore.put(settings);
+    }
+
+    function registerTrade() {
+        if (!dayActive) {
+            showFloatingMessage("No has iniciado un nuevo día. Haz clic en 'Iniciar Nuevo Día' antes de registrar trades.", "warning");
+            return;
+        }
+
+        const temporalidad = document.getElementById('temporalidad').value;
+        const montoPorTrade = parseFloat(document.getElementById('monto-por-trade').value);
+        const porcentaje = parseFloat(document.getElementById('porcentaje').value);
+        const resultado = document.getElementById('resultado').value;
+        dailyLimit = parseInt(document.getElementById('daily-limit').value);
+        dailyGoalAmount = parseFloat(document.getElementById('daily-goal-amount').value);
+        
+        if (isNaN(montoPorTrade) || isNaN(porcentaje) || montoPorTrade <= 0) {
+            showFloatingMessage("Por favor, ingrese montos válidos.", "warning");
+            return;
+        }
+
+        if (trades.length === 0) {
+            currentAmount = parseFloat(document.getElementById('monto-inicial').value);
+            if (isNaN(currentAmount) || currentAmount <= 0) {
+                showFloatingMessage("Por favor, ingrese un monto inicial válido.", "warning");
+                return;
+            }
+            initialCapital = currentAmount;
+            document.getElementById('monto-inicial').disabled = true;
+        }
+
+        if (operationCount >= dailyLimit) {
+            showFloatingMessage("Has alcanzado el límite diario de " + dailyLimit + " trades.", "warning");
+            return;
+        }
+
+        let ganancia = 0;
+        if (resultado === 'ganado') {
+            ganancia = montoPorTrade * (porcentaje / 100);
+            currentAmount += ganancia;
+            totalWon++;
+        } else {
+            ganancia = -montoPorTrade;
+            currentAmount += ganancia;
+            totalLost++;
+        }
+
+        operationCount++;
+
+        const fechaHora = new Date().toLocaleString();
+
+        const newTrade = {
+            temporalidad: temporalidad,
+            montoPorTrade: montoPorTrade,
+            porcentaje: porcentaje,
+            resultado: resultado,
+            fechaHora: fechaHora,
+            ganancia: ganancia
+        };
+
+        trades.push(newTrade);
+        updateTable();
+        updateSummary();
+        saveDataToDB();
+        updateGoalInfoAndMessages();
+        checkGoalReached();
+
+        if (operationCount >= dailyLimit) {
+            showFloatingMessage("Has alcanzado el límite diario de " + dailyLimit + " trades.", "warning");
+            showFinalProfitability();
+            endDaySession();
+            dayActive = false;
+        }
+    }
+
+    function updateTable() {
+        const tableBody = document.querySelector('#tradeTable tbody');
+        tableBody.innerHTML = '';
+        trades.forEach((trade, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${trade.temporalidad}</td>
+                <td>$${trade.montoPorTrade.toFixed(2)}</td>
+                <td>${trade.resultado === 'ganado' ? '<span class="positive">Ganado</span>' : '<span class="negative">Perdido</span>'}</td>
+                <td>${trade.fechaHora}</td>
+                <td>
+                    <button class="delete-btn" onclick="deleteTrade(${index})">Borrar</button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    function updateSummary() {
+        const montoActualEl = document.getElementById('monto-actual');
+        montoActualEl.textContent = `$${currentAmount.toFixed(2)}`;
+        montoActualEl.className = currentAmount >= 0 ? 'positive' : 'negative';
+
+        document.getElementById('operation-counter').textContent = operationCount;
+        document.getElementById('total-won').textContent = totalWon;
+        document.getElementById('total-lost').textContent = totalLost;
+
+        const effectivenessRate = (totalWon + totalLost > 0) ? ((totalWon / (totalWon + totalLost)) * 100).toFixed(2) + '%' : '0%';
+        document.getElementById('effectiveness-rate').textContent = effectivenessRate;
+    }
+
+    function modifyInitialAmount() {
+        if (trades.length > 0) {
+            showFloatingMessage("No se puede modificar el monto inicial después de registrar el primer trade del día.", "warning");
+            return;
+        }
+        const newInitial = parseFloat(document.getElementById('monto-inicial').value);
+        if (isNaN(newInitial) || newInitial < 0) {
+            showFloatingMessage("Por favor, ingrese un monto inicial válido.", "warning");
+            return;
+        }
+        currentAmount = newInitial;
+        initialCapital = newInitial;
+        updateSummary();
+        updateGoalInfoAndMessages();
+        saveDataToDB();
+    }
+
+    function deleteTrade(index) {
+        if (confirm("¿Está seguro de borrar este trade? Esta acción no se puede deshacer.")) {
+            const trade = trades[index];
+            currentAmount -= trade.ganancia;
+            if (trade.resultado === 'ganado') {
+                totalWon--;
+            } else {
+                totalLost--;
+            }
+            operationCount--;
+            trades.splice(index, 1);
+            updateTable();
+            updateSummary();
+            saveDataToDB();
+            updateGoalInfoAndMessages();
+        }
+    }
+
+    function resetAll() {
+        if (confirm("¿Está seguro de resetear todos los datos y el historial? Esta acción no se puede deshacer.")) {
+            trades = [];
+            currentAmount = 0;
+            operationCount = 0;
+            totalWon = 0;
+            totalLost = 0;
+            dailyLimit = 10;
+            dailyGoalAmount = 5;
+            initialCapital = 0;
+            dayActive = false;
+            document.getElementById('monto-inicial').disabled = false;
+            document.getElementById('monto-inicial').value = '';
+            document.getElementById('porcentaje').value = '85';
+            document.getElementById('resultado').value = 'ganado';
+            document.getElementById('daily-limit').value = dailyLimit;
+            document.getElementById('daily-goal-amount').value = dailyGoalAmount;
+            updateTable();
+            updateSummary();
+            updateGoalInfoAndMessages();
+            clearDB(true); // true para indicar que borre también el historial
+        }
+    }
+
+    function updateGoalInfoAndMessages() {
+        const goalInfoEl = document.getElementById('goal-info');
+        const n = parseInt(document.getElementById('daily-limit').value);
+        const dailyGoalInput = parseFloat(document.getElementById('daily-goal-amount').value);
+        const P = parseFloat(document.getElementById('porcentaje').value);
+        const M = parseFloat(document.getElementById('monto-por-trade').value);
+        const initCapital = parseFloat(document.getElementById('monto-inicial').value) || 0;
+        const goal = dailyGoalInput;
+
+        if (!initCapital || !M || isNaN(P) || isNaN(goal) || isNaN(n) || n<=0) {
+            goalInfoEl.textContent = '';
+            return;
+        }
+
+        const numerator = (goal + n*M);
+        const denominator = M*((P/100)+1);
+        let w = Math.ceil(numerator/denominator);
+
+        if (w <= n) {
+            goalInfoEl.textContent = `Para ganar $${goal.toFixed(2)} con ${n} trades diarios y $${M.toFixed(2)} por trade, necesitas al menos ${w} trades ganados (teórico).`;
+        } else {
+            goalInfoEl.textContent = `No es posible alcanzar la meta de $${goal.toFixed(2)} ni ganando todos los ${n} trades (teórico). Ajusta tu estrategia.`;
+        }
+    }
+
+    function checkGoalReached() {
+        if (initialCapital > 0 && currentAmount >= initialCapital + dailyGoalAmount) {
+            showFloatingMessage(`¡Meta diaria alcanzada! Ganancia: $${(currentAmount - initialCapital).toFixed(2)}. Puedes finalizar el día ahora.`, "success");
+        }
+    }
+
+    function showFinalProfitability() {
+        if (initialCapital > 0) {
+            const finalProfit = currentAmount - initialCapital;
+            const finalProfitPercent = ((finalProfit / initialCapital)*100).toFixed(2);
+            const goal = parseFloat(document.getElementById('daily-goal-amount').value) || 0;
+            if (currentAmount >= initialCapital + goal) {
+                showFloatingMessage(`Fin del día. Rentabilidad: ${finalProfitPercent}%. Alcanzaste la meta. Ganancia: $${finalProfit.toFixed(2)}.`, "success");
+            } else {
+                showFloatingMessage(`Fin del día. Rentabilidad: ${finalProfitPercent}% ($${finalProfit.toFixed(2)}) sin alcanzar la meta. Ajusta tu estrategia.`, "warning");
+            }
+        }
+    }
+
+    function endDaySession() {
+        if (initialCapital > 0 && trades.length > 0 && db) {
+            const finalProfit = currentAmount - initialCapital;
+            const now = new Date();
+            const sessionData = {
+                date: now.toLocaleString(),
+                initialCapital: initialCapital,
+                finalAmount: currentAmount,
+                profit: finalProfit,
+                winRate: (totalWon + totalLost > 0) ? ((totalWon/(totalWon+totalLost))*100).toFixed(2)+'%' : '0%'
+            };
+            const tx = db.transaction(HISTORY_STORE, 'readwrite');
+            const store = tx.objectStore(HISTORY_STORE);
+            store.add(sessionData);
+        }
+    }
+
+    function startNewDay() {
+        if (trades.length > 0) {
+            endDaySession();
+            showFloatingMessage("Día anterior finalizado y guardado en historial.", "success");
+        }
+        trades = [];
+        currentAmount = 0;
+        operationCount = 0;
+        totalWon = 0;
+        totalLost = 0;
+        initialCapital = 0;
+        dayActive = true;
+        document.getElementById('monto-inicial').disabled = false;
+        document.getElementById('monto-inicial').value = '';
+        updateTable();
+        updateSummary();
+        updateGoalInfoAndMessages();
+        showFloatingMessage("Nuevo día iniciado. Configura tu monto inicial y parámetros antes de operar.", "success");
+        clearDB(false); // false para no borrar el historial
+    }
+
+    function endDay() {
+        if (!dayActive) {
+            showFloatingMessage("No hay un día activo para finalizar.", "warning");
+            return;
+        }
+
+        if (trades.length > 0) {
+            showFinalProfitability();
+            endDaySession();
+        } else {
+            showFloatingMessage("No se registraron trades este día.", "warning");
+        }
+
+        dayActive = false;
+        showFloatingMessage("Día finalizado. Ahora puedes iniciar un nuevo día cuando lo desees.", "success");
+    }
+
+    function showHistory() {
+        if (!db) return;
+        const modal = document.getElementById('history-modal');
+        const list = document.getElementById('history-list');
+        list.innerHTML = 'Cargando historial...';
+
+        const tx = db.transaction(HISTORY_STORE, 'readonly');
+        const store = tx.objectStore(HISTORY_STORE);
+        const req = store.getAll();
+        req.onsuccess = function(e) {
+            const data = e.target.result;
+            list.innerHTML = '';
+            if (data.length === 0) {
+                list.innerHTML = 'No hay sesiones previas.';
+            } else {
+                data.forEach(entry => {
+                    const div = document.createElement('div');
+                    div.className = 'history-entry';
+                    div.innerHTML = `
+                        <strong>Fecha:</strong> ${entry.date}<br>
+                        <strong>Capital Inicial:</strong> $${entry.initialCapital.toFixed(2)}<br>
+                        <strong>Final:</strong> $${entry.finalAmount.toFixed(2)}<br>
+                        <strong>Ganancia:</strong> $${entry.profit.toFixed(2)} (${entry.winRate} WinRate)
+                    `;
+                    list.appendChild(div);
+                });
+            }
+            modal.style.display = 'block';
+        }
+    }
+
+    function closeHistory() {
+        document.getElementById('history-modal').style.display = 'none';
+    }
+
+    // Se han removido las funciones de Backup/Restore desde JSON
+
+    function showFloatingMessage(text, type) {
+        const container = document.getElementById('floating-messages-container');
+        const msg = document.createElement('div');
+        msg.className = `floating-message ${type}`;
+        msg.textContent = text;
+        container.appendChild(msg);
+        setTimeout(() => {
+            if (container.contains(msg)) {
+                container.removeChild(msg);
+            }
+        }, 5000);
+    }
+
+    function clearDB(clearHistory = false) {
+        const tx = db.transaction([TRADES_STORE, SETTINGS_STORE, HISTORY_STORE], 'readwrite');
+        tx.objectStore(TRADES_STORE).clear();
+        tx.objectStore(SETTINGS_STORE).clear();
+        if (clearHistory) {
+            tx.objectStore(HISTORY_STORE).clear(); // limpiar el historial también
+        }
+    }
+</script>
+
+</body>
+</html>
